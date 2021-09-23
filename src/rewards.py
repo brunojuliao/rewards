@@ -1195,10 +1195,12 @@ class Rewards:
             days_till_bonus_index = 3
             avail_index = 0
 
-            if len(stats) == 6:
-                IS_LEVEL_TWO = False
-            elif len(stats) == 5:
-                IS_LEVEL_TWO = True
+            # if len(stats) == 6:
+            #     IS_LEVEL_TWO = False
+            # elif len(stats) == 5:
+            #     IS_LEVEL_TWO = True
+
+            IS_LEVEL_TWO = len(stats) == 5
 
             if IS_LEVEL_TWO:
                 self.__sys_out("Summary", 1, flush=True)
