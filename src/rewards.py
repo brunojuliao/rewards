@@ -23,19 +23,21 @@ class Rewards:
     __POINTS_URL = "https://account.microsoft.com/rewards/pointsbreakdown"
     __TRENDS_URL = "https://trends.google.com/trends/api/dailytrends?hl=en-US&ed={}&geo=US&ns=15"
 
-    __WEB_DRIVER_WAIT_LONG = 30
-    __WEB_DRIVER_WAIT_SHORT = 5
+    # __WEB_DRIVER_WAIT_LONG = 30
+    # __WEB_DRIVER_WAIT_SHORT = 5
 
     __SYS_OUT_TAB_LEN = 8
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True):
+    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5):
         self.path = path
         self.email = email
         self.password = password
         self.debug = debug
         self.headless = headless
+        self.long_wait = long_wait
+        self.short_wait = short_wait
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -93,7 +95,7 @@ class Rewards:
             self.email, Keys.RETURN
         ).perform()
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.visibility_of_element_located((By.ID, "i0118"))
             ).send_keys(self.password, Keys.RETURN)
         except:
@@ -103,7 +105,7 @@ class Rewards:
 
         # confirm identity
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.url_contains("https://account.live.com/identity/confirm")
             )
             raise RuntimeError(
@@ -125,13 +127,13 @@ class Rewards:
 
         #check login was sucessful
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.url_contains("https://account.microsoft.com/")
             )
         except TimeoutException:
             # Terms of usage update
             try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                WebDriverWait(driver, self.short_wait).until(
                     EC.url_contains("https://account.live.com/tou")
                 )
                 WebDriverWait(driver, 2).until(
@@ -153,13 +155,13 @@ class Rewards:
 
         driver.get(self.__DASHBOARD_URL)
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.url_contains("https://rewards.microsoft.com/?redref")
             )
         except TimeoutException:
             # need to sign in via welcome page
             try:
-                WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                WebDriverWait(driver, self.short_wait).until(
                     EC.url_contains("https://rewards.microsoft.com/welcome")
                 )
                 driver.find_element_by_xpath('//*[@id="raf-signin-link-id"]'
@@ -171,10 +173,10 @@ class Rewards:
         #wait for offers to load completely
         try:
             offer_xpath = '//*[@id="daily-sets"]/mee-card-group[1]/div/mee-card[1]/div/card-content/mee-rewards-daily-set-item-content/div/a'
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.presence_of_element_located((By.XPATH, offer_xpath)))
+            WebDriverWait(driver, self.short_wait).until(EC.presence_of_element_located((By.XPATH, offer_xpath)))
         #if offers dont load, start function over
         except TimeoutException:
-            self.__open_dashboard(self, driver, try_count + 1)
+            self.__open_dashboard(driver, try_count + 1)
 
     def _open_dashboard(self, driver):
         self.__open_dashboard(driver, try_count=0)
@@ -192,7 +194,7 @@ class Rewards:
         while True:
             try:
                 progress_elements = WebDriverWait(
-                    driver, self.__WEB_DRIVER_WAIT_LONG
+                    driver, self.long_wait
                 ).until(
                     EC.visibility_of_all_elements_located(
                         (
@@ -238,7 +240,7 @@ class Rewards:
             return False
 
         current_progress, complete_progress = [
-            int(match) for match in re.findall('\d+', progress_text)
+            int(match) for match in re.findall(r'\d+', progress_text)
         ]
         driver.switch_to.window(driver.window_handles[0])
         return current_progress, complete_progress
@@ -307,7 +309,7 @@ class Rewards:
                 prev_progress = current_progress
                 try_count = 0
 
-            search_box = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.ID, "sb_form_q")))
+            search_box = WebDriverWait(driver, self.short_wait).until(EC.visibility_of_element_located((By.ID, "sb_form_q")))
             search_box.clear()
 
             # send query
@@ -330,7 +332,7 @@ class Rewards:
 
             if cookieclear == 0:
                 try:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.alert_is_present()
                     )
                     self.__handle_alerts(driver)
@@ -339,7 +341,7 @@ class Rewards:
 
                 try:
                     #self.__sys_out("cookie popup cleared", 3)
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
                     ).click()
                 except TimeoutException:
@@ -386,7 +388,7 @@ class Rewards:
         while True:
             try:
                 start_quiz = WebDriverWait(
-                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                    driver, self.short_wait
                 ).until(
                     EC.visibility_of_element_located((By.ID, 'rqStartQuiz'))
                 )
@@ -398,7 +400,7 @@ class Rewards:
                     start_quiz.click()
                 except:
                     driver.refresh()
-                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    time.sleep(self.short_wait)
             else:
                 try:
                     if driver.find_element_by_id(
@@ -408,7 +410,7 @@ class Rewards:
                         break
                 except:
                     driver.refresh()
-                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    time.sleep(self.short_wait)
 
             try_count += 1
             if try_count == 3:
@@ -432,7 +434,7 @@ class Rewards:
             #either on the last question, or just completed
             if quiz_current_progress == quiz_complete_progress - 1:
                 try:
-                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    time.sleep(self.short_wait)
                     #quiz has been completed
                     if len(
                         driver.find_elements_by_class_name('headerMessage_Refresh')
@@ -481,7 +483,7 @@ class Rewards:
                             question_progress in question_progresses
                         ):
                         #wait for the next question to appear
-                        time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                        time.sleep(self.short_wait)
                         break
                     question_progresses.append(question_progress)
                     option_index += 1
@@ -496,7 +498,7 @@ class Rewards:
         try_count = 0
         while True:
             try:
-                progress = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
+                progress = WebDriverWait(driver, self.long_wait).until(EC.visibility_of_element_located((By.CLASS_NAME, 'bt_Quefooter'))).text
                 current_question, complete_progress = map(
                     int, progress.split(' of ')
                 )
@@ -504,10 +506,10 @@ class Rewards:
                 driver.find_element_by_id(
                     'rqAnswerOption' + str(random.choice([0, 1]))
                 ).click()
-                time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                time.sleep(self.short_wait)
                 if current_question == complete_progress:
                     try:
-                        header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(EC.visibility_of_element_located((By.CLASS_NAME, 'headerMessage_Refresh')))
+                        header = WebDriverWait(driver, self.long_wait).until(EC.visibility_of_element_located((By.CLASS_NAME, 'headerMessage_Refresh')))
                         if "you earned" in header.text.lower():
                             self.__sys_out_progress(
                                 complete_progress, complete_progress, 4
@@ -561,7 +563,7 @@ class Rewards:
 
         # drag and drop
         if is_drag_and_drop:
-            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)  # let demo complete
+            time.sleep(self.short_wait)  # let demo complete
 
             # get all possible combinations
             to_from_combos = []
@@ -588,7 +590,7 @@ class Rewards:
                 while option_index < quiz_options_len:
                     try:
                         option = WebDriverWait(
-                            driver, self.__WEB_DRIVER_WAIT_LONG
+                            driver, self.long_wait
                         ).until(
                             EC.visibility_of_element_located(
                                 (
@@ -625,7 +627,7 @@ class Rewards:
                     if combo not in incorrect_options and from_option_index not in correct_options and to_option_index not in correct_options:
                         # drag from option to to option
                         from_option = WebDriverWait(
-                            driver, self.__WEB_DRIVER_WAIT_LONG
+                            driver, self.long_wait
                         ).until(
                             EC.visibility_of_element_located(
                                 (
@@ -635,7 +637,7 @@ class Rewards:
                             )
                         )
                         to_option = WebDriverWait(
-                            driver, self.__WEB_DRIVER_WAIT_LONG
+                            driver, self.long_wait
                         ).until(
                             EC.visibility_of_element_located(
                                 (
@@ -647,14 +649,14 @@ class Rewards:
                         ActionChains(driver).drag_and_drop(
                             from_option, to_option
                         ).perform()
-                        time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                        time.sleep(self.short_wait)
                         #self.__handle_alerts(driver)
 
                         if current_progress == complete_progress - 1:  # last question
                             try:
-                                #header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
+                                #header = WebDriverWait(driver, self.short_wait).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
                                 header = WebDriverWait(
-                                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                                    driver, self.short_wait
                                 ).until(
                                     EC.visibility_of_element_located(
                                         (
@@ -726,9 +728,9 @@ class Rewards:
 
                 if current_progress == complete_progress - 1:  # last question, works for -1, 0 too (already complete)
                     try:
-                        #header = WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
+                        #header = WebDriverWait(driver, self.short_wait).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="quizCompleteContainer"]/span/div[1]')))
                         header = WebDriverWait(
-                            driver, self.__WEB_DRIVER_WAIT_SHORT
+                            driver, self.short_wait
                         ).until(
                             EC.visibility_of_element_located(
                                 (
@@ -766,13 +768,13 @@ class Rewards:
 
                 try:
                     # click choice
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_LONG).until(
+                    WebDriverWait(driver, self.long_wait).until(
                         EC.element_to_be_clickable(
                             (By.ID, "rqAnswerOption{0}".format(option_index))
                         )
                     ).click()
                     prev_options.append(option_index)
-                    time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+                    time.sleep(self.short_wait)
                     #self.__handle_alerts(driver)
                 except TimeoutException:
                     self.__sys_out("Time out Exception", 3)
@@ -788,7 +790,7 @@ class Rewards:
         while current_progress != complete_progress:
             try:
                 progress = WebDriverWait(
-                    driver, self.__WEB_DRIVER_WAIT_SHORT
+                    driver, self.short_wait
                 ).until(
                     EC.visibility_of_element_located(
                         (
@@ -802,30 +804,30 @@ class Rewards:
                 return False
             current_progress, complete_progress = [
                 int(x)
-                for x in re.match("\((\d+) of (\d+)\)", progress).groups()
+                for x in re.match(r"\((\d+) of (\d+)\)", progress).groups()
             ]
             self.__sys_out_progress(current_progress - 1, complete_progress, 4)
             time.sleep(random.uniform(1, 3))
             driver.find_elements_by_class_name('wk_Circle')[random.randint(
                 0, 2
             )].click()
-            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+            time.sleep(self.short_wait)
 
             is_clicked, try_count = False, 0
             #sometimes the 'next' button isn't clickable and page needs to be refreshed
             while not is_clicked:
                 if len(driver.find_elements_by_class_name('cbtn')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.element_to_be_clickable((By.CLASS_NAME, 'cbtn'))
                     ).click()
                 elif len(driver.find_elements_by_class_name('wk_button')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.element_to_be_clickable(
                             (By.CLASS_NAME, 'wk_button')
                         )
                     ).click()
                 elif len(driver.find_elements_by_id('check')) > 0:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.element_to_be_clickable((By.ID, 'check'))
                     ).click()
                 else:
@@ -862,7 +864,7 @@ class Rewards:
 
     def __poll(self, driver, title):
         self.__sys_out("Starting poll", 3)
-        time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+        time.sleep(self.short_wait)
 
         #for daily poll
         if 'daily' in title:
@@ -873,7 +875,7 @@ class Rewards:
             element_id = 'OptionText0{0}'.format(random.randint(0, 1))
 
         try:
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.element_to_be_clickable((By.ID, element_id))
             ).click()
             self.__sys_out("Successfully completed poll", 3, True)
@@ -942,7 +944,7 @@ class Rewards:
 
                 self.__sys_out("Checking cookies popup", 3)
                 try:
-                    WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+                    WebDriverWait(driver, self.short_wait).until(
                         EC.element_to_be_clickable((By.ID, "bnp_btn_accept"))
                     ).click()
                     self.__sys_out("cookie popup cleared", 3)
@@ -1176,7 +1178,7 @@ class Rewards:
         try:
             self._open_dashboard(driver)
             #once pointsbreakdown link is clickable, page is loaded
-            WebDriverWait(driver, self.__WEB_DRIVER_WAIT_SHORT).until(
+            WebDriverWait(driver, self.short_wait).until(
                 EC.element_to_be_clickable(
                     (
                         By.XPATH,
@@ -1185,7 +1187,7 @@ class Rewards:
                 )
             )
             #sleep an additional 5 seconds to make sure stats are loaded
-            time.sleep(self.__WEB_DRIVER_WAIT_SHORT)
+            time.sleep(self.short_wait)
             stats = driver.find_elements_by_xpath(
                 '//mee-rewards-counter-animation//span'
             )

@@ -113,6 +113,21 @@ def parse_arguments():
         "the email password to use. Use -p with no argument to trigger a secure pw prompt"
     )
 
+    parser.add_argument(
+        '-lw',
+        '--long-wait',
+        action='store_const',
+        default=30,
+        help='Time in seconds for long wait (actions known for taking long)'
+    )
+    parser.add_argument(
+        '-sw',
+        '--short-wait',
+        action='store_const',
+        default=5,
+        help='Time in seconds for short wait (actions known for being fast)'
+    )
+
     parser.set_defaults(search_type='remaining', headless=True)
 
     args = parser.parse_args()

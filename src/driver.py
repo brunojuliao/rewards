@@ -29,7 +29,7 @@ class Driver:
     __MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36 EdgA/46.1.2.5140"
 
 
-    def __download_driver(driver_path, system, latest_version): #, driver_dl_index=0):
+    def __download_driver(self, driver_path, system, latest_version): #, driver_dl_index=0):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         # try:
@@ -51,7 +51,7 @@ class Driver:
 
         try:
             response = urlopen(url)# context args for mac
-        except ssl.SSLError as e:
+        except ssl.SSLError:
             response = urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)) # context args for mac
         zip_file_path = os.path.join(os.path.dirname(driver_path), os.path.basename(url))
         with open(zip_file_path, 'wb') as zip_file:
@@ -76,7 +76,7 @@ class Driver:
         os.rmdir(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-    def get_driver(path: str, device, headless):
+    def get_driver(self, path: str, device, headless):
         system = platform.system()
         if system == "Windows":
             if not path.endswith(".exe"):
@@ -116,14 +116,14 @@ class Driver:
                 if versions == None:
                     try:
                         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
-                    except ssl.SSLError as e:
+                    except ssl.SSLError:
                         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
                     #download second latest version,most recent is sometimes not out to public yet
 
-                    versions = list(map(lambda d: d.decode().split()[1], re.findall(b"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
+                    versions = list(map(lambda d: d.decode().split()[1], re.findall(r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
 
                 latest_version = versions[driver_dl_index]
-                Driver.__download_driver(path, system, latest_version)
+                self.__download_driver(path, system, latest_version)
                 driver_dl_index += 1
                 if driver_dl_index > 20:
                     print('Tried downloading the ' + str(driver_dl_index) + ' most recent chrome drivers. None match current Chrome browser version')
