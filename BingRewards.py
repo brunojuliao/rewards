@@ -58,7 +58,7 @@ def __main():
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
     rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless, args.long_wait, args.short_wait
+        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless, args.long_wait, args.short_wait, args.no_driver_download
     )
     completion = hist_log.get_completion()
 

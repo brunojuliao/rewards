@@ -30,7 +30,7 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5):
+    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5, no_driver_download=False):
         self.path = path
         self.email = email
         self.password = password
@@ -38,6 +38,7 @@ class Rewards:
         self.headless = headless
         self.long_wait = long_wait
         self.short_wait = short_wait
+        self.no_driver_download = no_driver_download
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -1072,7 +1073,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
                 )
                 self.__login(driver)
             self.completion.edge_search = self.__search(
@@ -1100,7 +1101,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
                 )
                 self.__login(driver)
             self.completion.web_search = self.__search(
@@ -1128,7 +1129,7 @@ class Rewards:
         try:
             if driver is None:
                 driver = Driver.get_driver(
-                    self.path, Driver.MOBILE_DEVICE, self.headless
+                    self.path, Driver.MOBILE_DEVICE, self.headless, self.no_driver_download
                 )
                 self.__login(driver)
 
@@ -1156,7 +1157,7 @@ class Rewards:
         try:
             if not driver:
                 driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless
+                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
                 )
                 self.__login(driver)
 

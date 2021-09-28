@@ -28,8 +28,8 @@ class Driver:
     __WEB_USER_AGENT            = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36 Edg/88.0.705.63"
     __MOBILE_USER_AGENT         = "Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Mobile Safari/537.36 EdgA/46.1.2.5140"
 
-
-    def __download_driver(self, driver_path, system, latest_version): #, driver_dl_index=0):
+    @staticmethod
+    def __download_driver(driver_path, system, latest_version): #, driver_dl_index=0):
         # determine latest chromedriver version
         #version selection faq: http://chromedriver.chromium.org/downloads/version-selection
         # try:
@@ -76,7 +76,8 @@ class Driver:
         os.rmdir(extracted_dir)
         os.chmod(driver_path, 0o755)
 
-    def get_driver(self, path: str, device, headless):
+    @staticmethod
+    def get_driver(path: str, device, headless, no_driver_download):
         system = platform.system()
         if system == "Windows":
             if not path.endswith(".exe"):
@@ -112,7 +113,9 @@ class Driver:
                 driver = webdriver.Chrome(path, options=options)
                 break
             #driver not up to date with Chrome browser, try different ver
-            except:
+            except Exception as e:
+                if no_driver_download:
+                    raise e
                 if versions == None:
                     try:
                         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
@@ -123,7 +126,7 @@ class Driver:
                     versions = list(map(lambda d: d.decode().split()[1], re.findall(r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
 
                 latest_version = versions[driver_dl_index]
-                self.__download_driver(path, system, latest_version)
+                Driver.__download_driver(path, system, latest_version)
                 driver_dl_index += 1
                 if driver_dl_index > 20:
                     print('Tried downloading the ' + str(driver_dl_index) + ' most recent chrome drivers. None match current Chrome browser version')

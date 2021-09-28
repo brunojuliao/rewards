@@ -117,6 +117,7 @@ def parse_arguments():
         '-lw',
         '--long-wait',
         action='store_const',
+        const='long_wait',
         default=30,
         help='Time in seconds for long wait (actions known for taking long)'
     )
@@ -124,7 +125,17 @@ def parse_arguments():
         '-sw',
         '--short-wait',
         action='store_const',
+        const='short_wait',
         default=5,
+        help='Time in seconds for short wait (actions known for being fast)'
+    )
+
+    parser.add_argument(
+        '-nd',
+        '--no-driver-download',
+        action='store_true',
+        dest='no_driver_download',
+        default=False,
         help='Time in seconds for short wait (actions known for being fast)'
     )
 
