@@ -843,7 +843,7 @@ class Rewards:
 
                 try:
                     if current_progress != complete_progress:
-                        WebDriverWait(driver, 5).until(
+                        WebDriverWait(driver, self.short_wait).until(
                             EC.visibility_of_element_located(
                                 (
                                     By.XPATH,
@@ -1196,12 +1196,15 @@ class Rewards:
             days_till_bonus_index = 3
             avail_index = 0
 
-            # if len(stats) == 6:
-            #     IS_LEVEL_TWO = False
-            # elif len(stats) == 5:
-            #     IS_LEVEL_TWO = True
+            IS_LEVEL_TWO = None
 
-            IS_LEVEL_TWO = len(stats) == 5
+            if len(stats) == 6:
+                IS_LEVEL_TWO = False
+            elif len(stats) == 5:
+                IS_LEVEL_TWO = True
+
+            if IS_LEVEL_TWO == None:
+                raise Exception("Unable to detect the user's level. Log in this account on your pc/browser and check if it's in the \"giving mode\"")
 
             if IS_LEVEL_TWO:
                 self.__sys_out("Summary", 1, flush=True)
