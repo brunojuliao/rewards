@@ -116,16 +116,14 @@ def parse_arguments():
     parser.add_argument(
         '-lw',
         '--long-wait',
-        action='store_const',
-        const='long_wait',
+        dest='long_wait',
         default=30,
         help='Time in seconds for long wait (actions known for taking long)'
     )
     parser.add_argument(
         '-sw',
         '--short-wait',
-        action='store_const',
-        const='short_wait',
+        dest='short_wait',
         default=5,
         help='Time in seconds for short wait (actions known for being fast)'
     )
@@ -136,7 +134,15 @@ def parse_arguments():
         action='store_true',
         dest='no_driver_download',
         default=False,
-        help='Time in seconds for short wait (actions known for being fast)'
+        help='Don\'t download the chrome driver (useful if running on docker with the driver already in the image)'
+    )
+
+    parser.add_argument(
+        '-dv',
+        '--driver-version',
+        dest='driver_version',
+        default=None,
+        help='The chrome driver version (avoid download/trying if you already know what version to use)'
     )
 
     parser.set_defaults(search_type='remaining', headless=True)

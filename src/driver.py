@@ -77,7 +77,7 @@ class Driver:
         os.chmod(driver_path, 0o755)
 
     @staticmethod
-    def get_driver(path: str, device, headless, no_driver_download):
+    def get_driver(path: str, device, headless, no_driver_download, driver_version):
         system = platform.system()
         if system == "Windows":
             if not path.endswith(".exe"):
@@ -94,6 +94,7 @@ class Driver:
         options.add_argument("--no-sandbox")
         options.add_argument("--ipc=host")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
         options.add_experimental_option("prefs", {"profile.default_content_setting_values.geolocation" : 1}) # geolocation permission, 0=Ask, 1=Allow, 2=Deny
         if headless:
             options.add_argument("--headless")
@@ -105,6 +106,8 @@ class Driver:
         else:
             options.add_argument("user-agent=" + Driver.__MOBILE_USER_AGENT)
 
+        options.page_load_strategy = 'eager'
+
         versions = None
 
         driver_dl_index = 0
@@ -115,8 +118,8 @@ class Driver:
             #driver not up to date with Chrome browser, try different ver
             except Exception as e:
                 if no_driver_download:
-                    raise e
-                if versions == None:
+                    raise e #Added to understand why the driver is failing on some cases
+                if versions == None and driver_version == None:
                     try:
                         response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
                     except ssl.SSLError:
@@ -125,7 +128,11 @@ class Driver:
 
                     versions = list(map(lambda d: d.decode().split()[1], re.findall(r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
 
-                latest_version = versions[driver_dl_index]
+                if driver_version == None:
+                    latest_version = versions[driver_dl_index]
+                else:
+                    latest_version = driver_version
+
                 Driver.__download_driver(path, system, latest_version)
                 driver_dl_index += 1
                 if driver_dl_index > 20:

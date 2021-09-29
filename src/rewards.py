@@ -30,7 +30,7 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5, no_driver_download=False):
+    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5, no_driver_download=False, driver_version=None):
         self.path = path
         self.email = email
         self.password = password
@@ -39,6 +39,7 @@ class Rewards:
         self.long_wait = long_wait
         self.short_wait = short_wait
         self.no_driver_download = no_driver_download
+        self.driver_version = driver_version
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -87,6 +88,11 @@ class Rewards:
                 self.stdout[-1] = out
             else:
                 self.stdout.append(out)
+
+    def get_driver(self, device):
+        Driver.get_driver(
+                    self.path, device, self.headless, self.no_driver_download, self.driver_version
+                )
 
     def __login(self, driver):
         self.__sys_out("Logging in", 2)
@@ -1072,9 +1078,7 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
-                )
+                driver = self.get_driver(Driver.WEB_DEVICE)
                 self.__login(driver)
             self.completion.edge_search = self.__search(
                 driver, Driver.WEB_DEVICE, is_edge=True
@@ -1100,9 +1104,7 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
-                )
+                driver = self.get_driver(Driver.WEB_DEVICE)
                 self.__login(driver)
             self.completion.web_search = self.__search(
                 driver, Driver.WEB_DEVICE
@@ -1128,9 +1130,7 @@ class Rewards:
 
         try:
             if driver is None:
-                driver = Driver.get_driver(
-                    self.path, Driver.MOBILE_DEVICE, self.headless, self.no_driver_download
-                )
+                driver = self.get_driver(Driver.MOBILE_DEVICE)
                 self.__login(driver)
 
             self.completion.mobile_search = self.__search(
@@ -1156,9 +1156,7 @@ class Rewards:
 
         try:
             if not driver:
-                driver = Driver.get_driver(
-                    self.path, Driver.WEB_DEVICE, self.headless, self.no_driver_download
-                )
+                driver = self.get_driver(Driver.WEB_DEVICE)
                 self.__login(driver)
 
             self.completion.offers = self.__offers(driver)
