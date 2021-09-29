@@ -936,6 +936,15 @@ class Rewards:
             ):
                 checked = True
                 self.__sys_out("Already checked", 2, True)
+            else:
+                try:
+                    #For the case when it's running for the second time and all answers are wrong (0/X)
+                    #It was retrying N times. Now it will check if the element with the status is present.
+                    offer.find_element_by_css_selector(".complete-green-color")
+                    checked = True
+                    self.__sys_out("Already checked", 2, True)
+                except NoSuchElementException:
+                    pass
         #quiz does not contain a check-mark icon, implying no points offered
         except NoSuchElementException:
             checked = True
