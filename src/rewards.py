@@ -90,7 +90,7 @@ class Rewards:
                 self.stdout.append(out)
 
     def get_driver(self, device):
-        Driver.get_driver(
+        return Driver.get_driver(
                     self.path, device, self.headless, self.no_driver_download, self.driver_version
                 )
 

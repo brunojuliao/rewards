@@ -118,6 +118,7 @@ def parse_arguments():
         '--long-wait',
         dest='long_wait',
         default=30,
+        type=float,
         help='Time in seconds for long wait (actions known for taking long)'
     )
     parser.add_argument(
@@ -125,6 +126,7 @@ def parse_arguments():
         '--short-wait',
         dest='short_wait',
         default=5,
+        type=float,
         help='Time in seconds for short wait (actions known for being fast)'
     )
 
