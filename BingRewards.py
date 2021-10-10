@@ -76,12 +76,12 @@ def __main():
                     rewards.complete_all(hist_log.get_search_hist())
                 #higher overhead, opens a new webdriver for each unfinished search type
                 else:
+                    if not completion.is_offers_completed():
+                        rewards.complete_offers()
                     if not completion.is_edge_search_completed():
                         rewards.complete_edge_search(hist_log.get_search_hist())
                     if not completion.is_web_search_completed():
                         rewards.complete_web_search(hist_log.get_search_hist())
-                    if not completion.is_offers_completed():
-                        rewards.complete_offers()
                     if not completion.is_mobile_search_completed():
                         rewards.complete_mobile_search(
                             hist_log.get_search_hist()

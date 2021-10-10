@@ -26,6 +26,8 @@ class Rewards:
     # __WEB_DRIVER_WAIT_LONG = 30
     # __WEB_DRIVER_WAIT_SHORT = 5
 
+    __TIMEOUT_RETRIES = 10
+
     __SYS_OUT_TAB_LEN = 8
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
@@ -213,8 +215,8 @@ class Rewards:
                 break
             except TimeoutException:
                 try_count += 1
-                time.sleep(3)
-            if try_count == 2:
+                time.sleep(self.short_wait)
+            if try_count == self.__TIMEOUT_RETRIES:
                 msg = 'When searching, too many time out exceptions when getting progress elements'
                 self.__sys_out(msg, 3, True)
                 raise NoSuchElementException(msg)
@@ -1280,9 +1282,9 @@ class Rewards:
 
     def complete_all(self, search_hist, is_print_stats=True):
         self.search_hist = search_hist
-        driver = self.__complete_edge_search()
+        driver = self.__complete_offers()
+        self.__complete_edge_search(driver)
         self.__complete_web_search(driver)
-        self.__complete_offers(driver)
         driver.quit()
         driver = self.__complete_mobile_search()
         if is_print_stats:
