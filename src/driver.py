@@ -121,12 +121,12 @@ class Driver:
                     raise e #Added to understand why the driver is failing on some cases
                 if versions == None and driver_version == None:
                     try:
-                        response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read()
+                        response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads").read().decode()
                     except ssl.SSLError:
-                        response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read()
+                        response = urlopen("https://sites.google.com/a/chromium.org/chromedriver/downloads", context=ssl.SSLContext(ssl.PROTOCOL_TLSv1)).read().decode()
                     #download second latest version,most recent is sometimes not out to public yet
 
-                    versions = list(map(lambda d: d.decode().split()[1], re.findall(r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
+                    versions = list(map(lambda d: d.split()[1], re.findall(r"ChromeDriver \d{2,3}\.0\.\d{4}\.\d+",response)))
 
                 if driver_version == None:
                     latest_version = versions[driver_dl_index]

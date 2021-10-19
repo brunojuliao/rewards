@@ -311,7 +311,7 @@ class Rewards:
                 break
             elif current_progress == prev_progress:
                 try_count += 1
-                if try_count == 4:
+                if try_count == self.__TIMEOUT_RETRIES:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
             else:
