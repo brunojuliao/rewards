@@ -33,16 +33,16 @@ class Rewards:
     __SYS_OUT_PROGRESS_BAR_LEN = 30
     cookieclearquiz = 0
 
-    def __init__(self, path, email, password, debug=True, headless=True, long_wait=30, short_wait=5, no_driver_download=False, driver_version=None):
+    def __init__(self, path, email, password, args, debug=True):
         self.path = path
         self.email = email
         self.password = password
         self.debug = debug
-        self.headless = headless
-        self.long_wait = long_wait
-        self.short_wait = short_wait
-        self.no_driver_download = no_driver_download
-        self.driver_version = driver_version
+        self.headless = args.headless
+        self.long_wait = args.long_wait
+        self.short_wait = args.short_wait
+        self.no_driver_download = args.no_driver_download
+        self.driver_version = args.driver_version
         self.completion = Completion()
         self.stdout = []
         self.search_hist = []
@@ -104,7 +104,7 @@ class Rewards:
         
         user_input = WebDriverWait(driver, self.short_wait).until(EC.visibility_of_element_located((By.ID, "i0116")))
 
-        ActionChains(driver).move_to_element(user_input).click().perform();
+        ActionChains(driver).move_to_element(user_input.wrapped_element).click().perform()
 
         user_input.send_keys(self.email, Keys.RETURN)
 
@@ -112,7 +112,7 @@ class Rewards:
             pwd_input = WebDriverWait(driver, self.short_wait).until(
                 EC.visibility_of_element_located((By.ID, "i0118"))
             )
-            pwd_input.send_keys(self.password, Keys.RETURN)
+            pwd_input.wrapped_element.send_keys(self.password, Keys.RETURN)
         except:
             ActionChains(driver).send_keys(
                 self.password, Keys.RETURN
@@ -308,6 +308,8 @@ class Rewards:
             last_request_time = self.__update_search_queries(
                 trending_date, last_request_time
             )
+        
+        query = ''
         while True:
             progress = self.__get_search_progress(driver, device, is_edge)
             if not progress:
@@ -326,10 +328,9 @@ class Rewards:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
 
-                sufix = " test"
-                if not query.endswith(sufix):
-                    query += sufix
-                    continue
+                if not query.endswith(" test"):
+                    self.__sys_out("Trying to append test to the search expression", 2, False, True)
+                    self.__queries.insert(0, "{0} test".format(query))
             else:
                 prev_progress = current_progress
                 try_count = 0

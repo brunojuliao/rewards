@@ -58,11 +58,9 @@ def __main():
     if not os.path.exists(DRIVERS_DIR):
         os.mkdir(DRIVERS_DIR)
 
-    #pylint: disable=too-many-arguments
     rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, DEBUG, args.headless, args.long_wait, args.short_wait, args.no_driver_download, args.driver_version
+        os.path.join(DRIVERS_DIR, DRIVER), email, password, args, DEBUG
     )
-    #pylint: enable=too-many-arguments
     completion = hist_log.get_completion()
 
     try:
@@ -144,6 +142,7 @@ def __main():
             if not completion.is_all_completed():
                 rewards.complete_all(hist_log.get_search_hist())
                 hist_log.write(rewards.completion, rewards.search_hist)
+                hist_log.get_completion()
             else:
                 print('All already completed')
 
