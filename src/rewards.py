@@ -286,6 +286,9 @@ class Rewards:
             output = output.decode('utf-8')
         response = json.loads(output)
 
+        if len(response["default"]["trendingSearchesDays"]) == 0:
+            return None
+
         #self.__queries = [] # will already be empty
         for topic in response["default"]["trendingSearchesDays"][0][
             "trendingSearches"]:
@@ -328,9 +331,9 @@ class Rewards:
                     self.__sys_out("Failed to complete search", 2, True, True)
                     return False
 
-                if not query.endswith(" test"):
-                    self.__sys_out("Trying to append test to the search expression", 2, False, True)
-                    self.__queries.insert(0, "{0} test".format(query))
+                if not query.startswith("what is "):
+                    self.__sys_out("Trying to prepend \"what is \" to the search expression", 2, False, True)
+                    self.__queries.insert(0, "what is {0}".format(query))
             else:
                 prev_progress = current_progress
                 try_count = 0
@@ -348,6 +351,10 @@ class Rewards:
                     last_request_time = self.__update_search_queries(
                         trending_date, last_request_time
                     )
+
+                    if last_request_time is None:
+                        self.__sys_out("The search query is exhausted", 2, False, True)
+
                     continue
                 if query not in self.search_hist:
                     break
