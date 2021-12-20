@@ -353,7 +353,8 @@ class Rewards:
                     )
 
                     if last_request_time is None:
-                        self.__sys_out("The search query is exhausted", 2, False, True)
+                        self.__sys_out("The search query is exhausted. Stopping the search.", 2, False, True)
+                        return False
 
                     continue
                 if query not in self.search_hist:
