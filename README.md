@@ -1,3 +1,5 @@
+Original repo: https://github.com/jjjchens235/bing-rewards
+
 An automated solution using Python and Selenium for earning daily Microsoft Rewards points in all categories including web, mobile, and offers.
 
 Please note: multiple accounts not supported, USA and UK users only.
