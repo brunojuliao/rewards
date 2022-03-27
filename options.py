@@ -1,5 +1,8 @@
 import argparse
 import getpass
+import selenium
+import sys
+from src.driver import ChromeDriver, MsEdgeDriver
 
 
 class PasswordAction(argparse.Action):
@@ -11,6 +14,16 @@ class PasswordAction(argparse.Action):
             setattr(namespace, self.dest, values)
         else:
             setattr(namespace, self.dest, getpass.getpass())
+
+
+class DriverAction(argparse.Action):
+    def __call__(self, parser, namespace, value, option_string=None):
+        mapping = {"chrome": ChromeDriver,
+                   "msedge": MsEdgeDriver}
+        if value == "msedge" and int(selenium.__version__.split('.')[0]) < 4:
+            print("Microsoft Edge is only supported on selenium 4 and above\nRun 'pip install -U selenium' to update", file=sys.stderr)
+            sys.exit(-1)
+        setattr(namespace, self.dest, mapping[value])
 
 
 def print_args(args):
@@ -77,12 +90,20 @@ def parse_arguments():
         help='run offers'
     )
     search_group.add_argument(
+        '-pc',
+        '--punchcard',
+        const='punch card',
+        action='store_const',
+        dest='search_type',
+        help='run punch card'
+    )
+    search_group.add_argument(
         '-a',
         '--all',
         const='all',
         action='store_const',
         dest='search_type',
-        help='run web, mobile, and offers'
+        help='run web, mobile, offers, and punch cards'
     )
 
     headless_group = parser.add_mutually_exclusive_group()
@@ -109,8 +130,46 @@ def parse_arguments():
         '--password',
         action=PasswordAction,
         nargs='?',
-        help=
-        "the email password to use. Use -p with no argument to trigger a secure pw prompt"
+        help="the email password to use. Use -p with no argument to trigger a secure pw prompt"
+    )
+
+    cookies_group = parser.add_mutually_exclusive_group()
+    cookies_group.add_argument(
+        '-c',
+        '--cookies',
+        dest='cookies',
+        action='store_true',
+        help='run browser with cookies, this is the default'
+    )
+    cookies_group.add_argument(
+        '-nc',
+        '--no-cookies',
+        dest='cookies',
+        action='store_false',
+        help='run browser without cookies'
+    )
+
+    telegram_group = parser.add_mutually_exclusive_group()
+    telegram_group.add_argument(
+        '-t',
+        '--telegram',
+        dest='telegram',
+        action='store_true',
+        help='send notification to telegram using setup.py credentials, this is the default'
+    )
+    telegram_group.add_argument(
+        '-nt',
+        '--no-telegram',
+        dest='telegram',
+        action='store_false',
+        help='do not send notifications to telegram'
+    )
+    parser.add_argument(
+        '-tat', '--telegram_api_token', help='Telegram API Token'
+    )
+
+    parser.add_argument(
+        '-tu', '--telegram_userid', help='Telegram User ID'
     )
 
     parser.add_argument(
@@ -121,6 +180,7 @@ def parse_arguments():
         type=float,
         help='Time in seconds for long wait (actions known for taking long)'
     )
+
     parser.add_argument(
         '-sw',
         '--short-wait',
@@ -131,23 +191,16 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        '-nd',
-        '--no-driver-download',
-        action='store_true',
-        dest='no_driver_download',
-        default=False,
-        help='Don\'t download the chrome driver (useful if running on docker with the driver already in the image)'
+        '-d',
+        '--driver',
+        dest='driver',
+        type=str.lower,
+        choices=['chrome', 'msedge'],
+        action=DriverAction
     )
 
-    parser.add_argument(
-        '-dv',
-        '--driver-version',
-        dest='driver_version',
-        default=None,
-        help='The chrome driver version (avoid download/trying if you already know what version to use)'
-    )
-
-    parser.set_defaults(search_type='remaining', headless=True)
+    parser.set_defaults(search_type='remaining', headless=True,
+                        cookies=False, telegram=True, driver=ChromeDriver)
 
     args = parser.parse_args()
 

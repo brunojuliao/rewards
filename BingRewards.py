@@ -1,13 +1,13 @@
 import sys
 import os
+from src.driver import Driver
 from src.rewards import Rewards
 from src.log import HistLog
+from src.telegram import TelegramMessenger
 import logging
 import base64
 from options import parse_arguments
 
-DRIVERS_DIR = "drivers"
-DRIVER = "chromedriver"
 
 LOG_DIR = "logs"
 ERROR_LOG = "error.log"
@@ -18,11 +18,19 @@ DEBUG = True
 
 
 def __decode(encoded):
-    return base64.b64decode(encoded).decode()
+    if encoded:
+        return base64.b64decode(encoded).decode()
+
+
+def complete_search(rewards, completion, search_type, search_hist):
+    print(f"\nYou selected {search_type}\n")
+    if not completion.is_search_type_completed(search_type):
+        rewards.complete_search_type(search_type, completion, search_hist)
+    else:
+        print(f'{search_type.capitalize()} already completed\n')
 
 
 def __main():
-    args = parse_arguments()
     # change to top dir
     dir_run_from = os.getcwd()
     top_dir = os.path.dirname(sys.argv[0])
@@ -35,116 +43,66 @@ def __main():
         os.path.join(LOG_DIR, RUN_LOG), os.path.join(LOG_DIR, SEARCH_LOG)
     )
 
-    # get credentials
+    try:
+        from src import config
+    except ImportError:
+        print("\nFailed to import configuration file")
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(message)s',
+            filename=os.path.join(LOG_DIR, ERROR_LOG)
+        )
+        logging.exception(hist_log.get_timestamp())
+        logging.debug("")
+        raise
+
+    args = parse_arguments()
+    # browser cookies
+    cookies = args.cookies
+
+    # microsoft email/pw
     if args.email and args.password:
         email = args.email
         password = args.password
+        cookies = False
     else:
-        try:
-            from src import config
-        except ImportError:
-            print("\nFailed to import configuration file")
+        email = __decode(config.credentials['email'])
+        password = __decode(config.credentials['password'])
+
+    if args.telegram_api_token and args.telegram_userid:
+        telegram_api_token = args.telegram_api_token
+        telegram_userid = args.telegram_userid
+    else:
+        # telegram credentials
+        telegram_api_token = __decode(config.credentials.get('telegram_api_token'))
+        telegram_userid = __decode(config.credentials.get('telegram_userid'))
+        
+    if not args.telegram or not telegram_api_token or not telegram_userid:
+        telegram_messenger = None
+    else:
+        telegram_messenger = TelegramMessenger(telegram_api_token, telegram_userid)
+    
+    rewards = Rewards(email, password, telegram_messenger, DEBUG, args.headless, cookies, args.driver)
+    completion = hist_log.get_completion()
+    search_hist = hist_log.get_search_hist()
+    search_type = args.search_type
+
+    try:
+        complete_search(rewards, completion, search_type, search_hist)
+        hist_log.write(rewards.completion, rewards.search_hist)
+        completion = hist_log.get_completion()
+
+        # check again, log if any failed
+        if not completion.is_search_type_completed(search_type):
             logging.basicConfig(
                 level=logging.DEBUG,
                 format='%(message)s',
                 filename=os.path.join(LOG_DIR, ERROR_LOG)
             )
-            logging.exception(hist_log.get_timestamp())
+            logging.debug(hist_log.get_timestamp())
+            for line in rewards.stdout:
+                logging.debug(line)
             logging.debug("")
-            raise
-        email = __decode(config.credentials['email'])
-        password = __decode(config.credentials['password'])
-
-    if not os.path.exists(DRIVERS_DIR):
-        os.mkdir(DRIVERS_DIR)
-
-    rewards = Rewards(
-        os.path.join(DRIVERS_DIR, DRIVER), email, password, args, DEBUG
-    )
-    completion = hist_log.get_completion()
-
-    try:
-        if args.search_type == 'remaining':
-            print("\n\t{}\n".format("You selected remaining"))
-
-            if not completion.is_all_completed():
-                #complete_all() is fastest method b/c it doesn't open new webdriver for each new search type, so even if already completed method is tried again, it has very low overhead.
-                if not completion.is_web_search_completed(
-                ) and not completion.is_mobile_search_completed():
-                    rewards.complete_all(hist_log.get_search_hist())
-                #higher overhead, opens a new webdriver for each unfinished search type
-                else:
-                    if not completion.is_offers_completed():
-                        rewards.complete_offers()
-                    if not completion.is_edge_search_completed():
-                        rewards.complete_edge_search(hist_log.get_search_hist())
-                    if not completion.is_web_search_completed():
-                        rewards.complete_web_search(hist_log.get_search_hist())
-                    if not completion.is_mobile_search_completed():
-                        rewards.complete_mobile_search(
-                            hist_log.get_search_hist()
-                        )
-
-                hist_log.write(rewards.completion, rewards.search_hist)
-                completion = hist_log.get_completion()
-                if not completion.is_all_completed(
-                ):  # check again, log if any failed
-                    logging.basicConfig(
-                        level=logging.DEBUG,
-                        format='%(message)s',
-                        filename=os.path.join(LOG_DIR, ERROR_LOG)
-                    )
-                    logging.debug(hist_log.get_timestamp())
-                    for line in rewards.stdout:
-                        logging.debug(line)
-                    logging.debug("")
-
-            else:
-                print("Nothing remaining")
-        elif args.search_type == 'web':
-            print("\n\t{}\n".format("You selected web search"))
-            if not completion.is_edge_and_web_search_completed():
-                if not completion.is_edge_search_completed():
-                    rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_web_search_completed():
-                    rewards.complete_web_search(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Web search already completed')
-        elif args.search_type == 'mobile':
-            print("\n\t{}\n".format("You selected mobile search"))
-            if not completion.is_edge_and_mobile_search_completed():
-                if not completion.is_edge_search_completed():
-                    rewards.complete_edge_search(hist_log.get_search_hist())
-                if not completion.is_mobile_search_completed():
-                    rewards.complete_mobile_search(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Mobile search already completed')
-        elif args.search_type == 'both':
-            print(
-                "\n\t{}\n".format("You selected both searches (web & mobile)")
-            )
-            if not completion.is_both_searches_completed():
-                rewards.complete_both_searches(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Both searches already completed')
-        elif args.search_type == 'offers':
-            print("\n\t{}\n".format("You selected offers"))
-            if not completion.is_offers_completed():
-                rewards.complete_offers()
-                hist_log.write(rewards.completion, rewards.search_hist)
-            else:
-                print('Offers already completed')
-        elif args.search_type == 'all':
-            print("\n\t{}\n".format("You selected all"))
-            if not completion.is_all_completed():
-                rewards.complete_all(hist_log.get_search_hist())
-                hist_log.write(rewards.completion, rewards.search_hist)
-                hist_log.get_completion()
-            else:
-                print('All already completed')
 
     except:  # catch *all* exceptions
         logging.basicConfig(
@@ -156,6 +114,11 @@ def __main():
         logging.debug("")
 
         hist_log.write(rewards.completion, rewards.search_hist)
+        if telegram_messenger:
+            # send error msg to telegram
+            import traceback
+            error_msg = traceback.format_exc()
+            telegram_messenger.send_message(error_msg)
         raise
 
 

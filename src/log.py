@@ -3,7 +3,6 @@ from datetime import datetime
 from dateutil import tz
 
 
-
 class HistLog:
     __DATETIME_FORMAT = "%a, %b %d %Y %I:%M%p"
 
@@ -22,6 +21,7 @@ class HistLog:
     __WEB_SEARCH_OPTION = "Web Search"
     __MOBILE_SEARCH_OPTION = "Mobile Search"
     __OFFERS_OPTION = "Offers"
+    __PUNCHCARD_OPTION = "Latest Punch Card Activity"
 
     def __init__(self, run_path, search_path, run_datetime=datetime.now()):
         self.run_path = run_path
@@ -61,6 +61,7 @@ class HistLog:
                     self.__completion.web_search = True
                     self.__completion.mobile_search = True
                     self.__completion.offers = True
+                    self.__completion.punchcard = True
                 else:
                     if self.__EDGE_SEARCH_OPTION not in completed:
                         self.__completion.edge_search = True
@@ -70,6 +71,8 @@ class HistLog:
                         self.__completion.mobile_search = True
                     if self.__OFFERS_OPTION not in completed:
                         self.__completion.offers = True
+                    if self.__PUNCHCARD_OPTION not in completed:
+                        self.__completion.punchcard = True
             else:
                 self.__search_hist = []
 
@@ -94,6 +97,8 @@ class HistLog:
                 failed.append(self.__MOBILE_SEARCH_OPTION)
             if not self.__completion.is_offers_completed():
                 failed.append(self.__OFFERS_OPTION)
+            if not self.__completion.is_punchcard_completed():
+                failed.append(self.__PUNCHCARD_OPTION)
             failed = ', '.join(failed)
             msg = self.__COMPLETED_FALSE.format(failed)
         else:
@@ -124,27 +129,68 @@ class Completion:
         self.web_search = False
         self.mobile_search = False
         self.offers = False
+        self.punchcard = False
 
     def is_edge_search_completed(self):
         return self.edge_search
+
     def is_web_search_completed(self):
         return self.web_search
+
     def is_edge_and_web_search_completed(self):
         return self.web_search and self.edge_search
+
     def is_edge_and_mobile_search_completed(self):
         return self.mobile_search and self.edge_search
+
     def is_mobile_search_completed(self):
         return self.mobile_search
+
     def is_both_searches_completed(self):
         return self.is_edge_and_web_search_completed() and self.mobile_search
+
     def is_offers_completed(self):
         return self.offers
+
+    def is_punchcard_completed(self):
+        return self.punchcard
+
     def is_all_completed(self):
         return self.is_edge_and_web_search_completed(
-        ) and self.mobile_search and self.offers
+        ) and self.mobile_search and self.offers and self.punchcard
 
     def update(self, completion):
+        """
+        Updates the run.log based on the
+        - state after the most recent run
+        - state prior to most recent run, IF already ran today
+        The first is obvious, the 2nd not as much.
+
+        If a search/action was previously successful today
+        , i.e is not marked failed in run.log,
+        and when re-run, is considered failed,
+        it remains un-failed
+        due to max()
+
+        This is useful when user presses ctrl + c, but also
+        when user re-runs a punchcard after a prev success
+        """
         self.edge_search = max(self.edge_search, completion.edge_search)
         self.web_search = max(self.web_search, completion.web_search)
         self.mobile_search = max(self.mobile_search, completion.mobile_search)
         self.offers = max(self.offers, completion.offers)
+        self.punchcard = max(self.punchcard, completion.punchcard)
+
+    def is_search_type_completed(self, search_type):
+        if search_type == 'web':
+            return self.is_edge_and_web_search_completed()
+        elif search_type == 'mobile':
+            return self.is_edge_and_mobile_search_completed()
+        elif search_type == 'both':
+            return self.is_both_searches_completed()
+        elif search_type == 'offers':
+            return self.is_offers_completed()
+        elif search_type == 'punch card':
+            return self.is_punchcard_completed()
+        elif search_type in ('all', 'remaining'):
+            return self.is_all_completed()
