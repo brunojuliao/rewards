@@ -29,5 +29,5 @@
 		"ms-azuretools.vscode-docker",
 	],
 
-	"postCreateCommand": "pip install -r requirements.txt",
+	"postCreateCommand": "./setup.sh",
 }

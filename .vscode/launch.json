@@ -10,6 +10,22 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Rewards offers",
+            "type": "python",
+            "request": "launch",
+            "program": "/workspaces/rewards/BingRewards.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-hl",
+                "-a",
+                "-lw=20",
+                "-sw=3",
+                "-dv=90.0.4430.24",
+                "-e=",
+                "-p="
+            ]
         }
     ]
 }
