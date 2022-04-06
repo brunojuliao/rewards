@@ -37,4 +37,6 @@ printf "credentials = dict(
 )
 " > src/config.py
 
-eval "/usr/bin/python3 BingRewards.py $1"
+sed -i 's/options.add_argument("--disable-gpu")/options.add_argument("--disable-gpu")\n        options.add_argument("--no-sandbox")\n        options.add_argument("--ipc=host")\n        options.add_argument("--disable-dev-shm-usage")\n/' src/driver.py
+
+eval "/usr/bin/python3 BingRewards.py $params"
