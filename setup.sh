@@ -38,7 +38,7 @@ printf "credentials = dict(
 " > src/config.py
 
 sed -i 's/options.add_argument("--disable-gpu")/options.add_argument("--disable-gpu")\n        options.add_argument("--no-sandbox")\n        options.add_argument("--ipc=host")\n        options.add_argument("--disable-dev-shm-usage")\n/' src/driver.py
-sed -i "s/('telegram_api_token'))/('telegram_api_token')).replace("\n", "")" BingRewards.py
-sed -i "s/('telegram_userid'))/('telegram_userid')).replace("\n", "")" BingRewards.py
+sed -i "s/('telegram_api_token'))/('telegram_api_token')).replace(\"\n\", \"\")" BingRewards.py
+sed -i "s/('telegram_userid'))/('telegram_userid')).replace(\"\n\", \"\")" BingRewards.py
 
 eval "/usr/bin/python3 BingRewards.py $params"
