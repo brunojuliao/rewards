@@ -29,5 +29,5 @@
 		"ms-azuretools.vscode-docker",
 	],
 
-	// "postCreateCommand": "./setup.sh",
+	// "postCreateCommand": "./run.sh",
 }

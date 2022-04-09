@@ -9,3 +9,11 @@ RUN apt install -y wget vim cron git cl-base64 python3 pip chromium-driver chrom
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
 RUN apt install ./google-chrome-stable_current_amd64.deb
+
+RUN mkdir /rewards
+
+WORKDIR /rewards
+
+RUN git clone https://github.com/jjjchens235/bing-rewards.git
+
+RUN pip install -r bing-rewards/BingRewards/requirements.txt

@@ -15,3 +15,9 @@ RUN mkdir rewards
 WORKDIR /rewards
 
 COPY . .
+
+RUN chmod +x run.sh
+
+RUN git clone https://github.com/jjjchens235/bing-rewards.git
+
+RUN pip install -r bing-rewards/BingRewards/requirements.txt
