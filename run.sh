@@ -31,12 +31,15 @@ then
     tu=$( echo $5 | base64 )
 fi
 
-if [ ! -f src/config.py ] ; then printf "credentials = dict(
-    email = '$email',
-    password = '$pass',
-    telegram_api_token = '$tat',
-    telegram_userid = '$tu'
-)" > src/config.py ; fi
+if [ ! -f config/config.json ] ; then
+    mkdir config;
+    printf "{
+        \"email\": \"$email\",
+        \"password\": \"$pass\",
+        \"telegram_api_token\": \"$tat\",
+        \"telegram_userid\": \"$tu\"
+    }" > config/config.json ;
+fi
 
 sed -i 's/options.add_argument("--disable-gpu")/options.add_argument("--disable-gpu")\n        options.add_argument("--no-sandbox")\n        options.add_argument("--ipc=host")\n        options.add_argument("--disable-dev-shm-usage")\n/' src/driver.py
 sed -i "s/('telegram_api_token'))/('telegram_api_token')).replace('\\\n', '')/" BingRewards.py
