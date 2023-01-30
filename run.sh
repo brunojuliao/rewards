@@ -3,7 +3,7 @@
 cd /rewards/bing-rewards/
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 apt install ./google-chrome-stable_current_amd64.deb
-./update.sh
+#./update.sh
 cd /rewards/bing-rewards/BingRewards
 
 if [ $# -eq 0 ] ; then
